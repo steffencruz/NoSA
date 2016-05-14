@@ -36,6 +36,8 @@ class ConnectedSystem
 		std::vector<double> m;
 		
 	private:
+	
+		void UpdateSprings(int obj);
 		int nsprings;	
 		std::vector<int>    s1;
 		std::vector<int>    s2;	

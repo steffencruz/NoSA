@@ -29,11 +29,12 @@ void ConnectedSystem::RemoveMass(int obj){
 	m.erase(m.begin()+obj);		
 	nmasses--;	
 	
-	// remove all associated connections too
+	// remove all associated connections with obj
 	std::vector<int> indx = GetObjConnections(obj);
 	for(int i=0; i<indx.size(); i++){
 		RemoveSpring(indx.at(i));
 	}
+	UpdateSprings(obj);
 	
 	return;	
 }
@@ -43,6 +44,8 @@ void ConnectedSystem::RemoveSpring(int obj){
 	if(!CheckSpringObj(obj))
 		return;
 	
+	// the mass indices also change when we remove an element.
+	// spring [2-4] becomes [1-3] if we remove element 0.
 	s1.erase(s1.begin()+obj);
 	s2.erase(s2.begin()+obj);
 	k.erase(k.begin()+obj);		
@@ -50,6 +53,16 @@ void ConnectedSystem::RemoveSpring(int obj){
 	nsprings--;	
 	
 	return;
+}
+
+void ConnectedSystem::UpdateSprings(int obj){
+
+	for(int i=0; i<nsprings; i++){
+		if(s1.at(i)>=obj)
+			s1.at(i)--;
+		if(s2.at(i)>=obj)
+			s2.at(i)--;			
+	}
 }
 
 std::vector<int> ConnectedSystem::GetObjConnections(int obj){
@@ -92,7 +105,7 @@ double ConnectedSystem::GetMassM(int obj){
 bool ConnectedSystem::CheckMassObj(int obj){
 
 	if(obj<0 || obj>=nmasses){
-		printf("\n\t Error [Mass] :  index %i out of range. Must be in range 0-%i!\n",obj,nmasses);
+		printf("\n\t Error [Mass] :  index %i out of range. Must be in range 0-%i!\n",obj,nmasses-1);
 		return false;
 	} else{
 		return true;
@@ -102,7 +115,7 @@ bool ConnectedSystem::CheckMassObj(int obj){
 bool ConnectedSystem::CheckSpringObj(int obj){
 
 	if(obj<0 || obj>=nsprings){
-		printf("\n\t Error [Spring] :  index %i out of range. Must be in range 0-%i!\n",obj,nsprings);
+		printf("\n\t Error [Spring] :  index %i out of range. Must be in range 0-%i!\n",obj,nsprings-1);
 		return false;
 	} else{
 		return true;
