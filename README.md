@@ -7,3 +7,4 @@ Checklist [physics]:-
   3. Integrate Armadillo linear algebra package [DONE]
   3. Build force matrix for example system and solve for eigenvalues and eigenvectors [DONE]
   4. Consistency check with simple analytical case
+  5. Implement solutions to produce a dynamic system
