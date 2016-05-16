@@ -1,6 +1,9 @@
-#include"ConnectedSystem.h"
-#include<algorithm>
-#include<cmath>
+#include "ConnectedSystem.h"
+#include <algorithm>
+#include <cmath>
+
+using namespace arma;
+
 
 ConnectedSystem::ConnectedSystem(){
 
@@ -9,6 +12,85 @@ ConnectedSystem::ConnectedSystem(){
 
 ConnectedSystem::~ConnectedSystem(){
 
+}
+
+void ConnectedSystem::SetupMatrix(){
+	int n = nmasses;
+	
+	K = zeros<mat>(n,n);	
+	L = zeros<mat>(n,n);	
+	for(int i=0; i<nsprings; i++){
+		K(s1.at(i),s2.at(i)) = k.at(i)/m.at(s1.at(i));
+		K(s2.at(i),s1.at(i)) = k.at(i)/m.at(s2.at(i));	
+		L(s1.at(i),s2.at(i)) = l.at(i);	
+		L(s2.at(i),s1.at(i)) = l.at(i);	
+	}
+
+	K.print("K = ");
+	L.print("L = ");	
+		
+	F = zeros<mat>(2*n,2*n);
+	
+	double val1, val2, val3, dx, dy, l0;
+	int i1,i2;
+	std::vector<int> indx;
+	
+	for(int i=0; i<n; i++){
+		for(int j=0; j<n; j++){	
+			
+			val1 = 0;
+			val2 = 0;
+			val3 = 0;			
+			if(i==j){
+				printf("\n\t [%i,%i] Diagonal :  ",i,j);
+			
+				indx = GetObjConnections(i);
+				for(int k=0; k<indx.size(); k++){
+					GetSpringObjs(indx.at(k),i1,i2);
+					dx = x.at(i1)-x.at(i2);
+					dy = y.at(i1)-y.at(i2);					
+					l0 = L(i1,i2);
+					printf("\n\t\t%i - %i  dx = %.2f  dy = %.2f  l0 = %.2f  k = %.2f",i1,i2,dx,dy,l0,K(i1,i2));
+					
+					val1 += -K(i1,i2)*dx*dx/(l0*l0);
+					val2 += -K(i1,i2)*dx*dy/(l0*l0);
+					val3 += -K(i1,i2)*dy*dy/(l0*l0);
+				}
+			} else {
+				if(K(i,j)==0)
+					continue;					
+				dx = x.at(i)-x.at(j);
+				dy = y.at(i)-y.at(j);
+				
+				val1  = K(i,j)*dx*dx/(L(i,j)*L(i,j));
+				val2  = K(i,j)*dx*dx/(L(i,j)*L(i,j));
+				val3  = K(i,j)*dx*dx/(L(i,j)*L(i,j));	
+			}
+			
+			F(i,j)     = val1;
+			F(i+n,j)   = val2;
+			F(i,j+n)   = val2;
+			F(i+n,j+n) = val3;
+		}
+	}
+	
+	F.print("\nF = ");		
+	return;
+}
+
+void ConnectedSystem::SolveMatrix(){
+	
+	SetupMatrix();
+
+	W = arma::zeros<arma::vec>(nmasses);
+	V = arma::zeros<arma::mat>(nmasses,nmasses);	
+	
+	bool success = arma::eig_sym(W,V,F);
+	
+	W.print("\nEigenvalues = ");
+	
+	V.print("\nEigenvectors = ");	
+	
 }
 
 void ConnectedSystem::AddMass(double xx, double yy, double mm){
@@ -23,18 +105,18 @@ void ConnectedSystem::RemoveMass(int obj){
 	
 	if(!CheckMassObj(obj))
 		return;
-	
+			
+	// remove all associated connections with obj
+	std::vector<int> indx = GetObjConnections(obj);
+	std::sort(indx.begin(),indx.end(), std::greater<int>()); // descending order sort
+	for(int i=0; i<indx.size(); i++)
+		RemoveSpring(indx.at(i));
+
+	// now remove mass
 	x.erase(x.begin()+obj);
 	y.erase(y.begin()+obj);
 	m.erase(m.begin()+obj);		
 	nmasses--;	
-	
-	// remove all associated connections with obj
-	std::vector<int> indx = GetObjConnections(obj);
-	for(int i=0; i<indx.size(); i++){
-		RemoveSpring(indx.at(i));
-	}
-	UpdateSprings(obj);
 	
 	return;	
 }
@@ -55,27 +137,26 @@ void ConnectedSystem::RemoveSpring(int obj){
 	return;
 }
 
-void ConnectedSystem::UpdateSprings(int obj){
-
-	for(int i=0; i<nsprings; i++){
-		if(s1.at(i)>=obj)
-			s1.at(i)--;
-		if(s2.at(i)>=obj)
-			s2.at(i)--;			
-	}
-}
-
 std::vector<int> ConnectedSystem::GetObjConnections(int obj){
 	
 	std::vector<int> indx;
-	
-	for(int i=0; i<nsprings; i++){
-
+	// returns the spring indices, not the mass indices
+	for(int i=0; i<nsprings; i++)
 		if(s1.at(i)==obj || s2.at(i)==obj)
 			indx.push_back(i);
-	}
 		
 	return indx;
+}
+
+void ConnectedSystem::GetMassXYM(int obj, double &xx, double &yy, double &mm){
+	
+	if(!CheckMassObj(obj))
+		return;
+	
+	xx = x.at(obj);
+	yy = y.at(obj);
+	mm = m.at(obj);
+	return ;
 }
 
 double ConnectedSystem::GetMassX(int obj){
@@ -126,6 +207,16 @@ void ConnectedSystem::AddSpring(int obj1, int obj2, double kk){
 
 	if(!CheckMassObj(obj1) || !CheckMassObj(obj2))
 		return;
+		
+	if(obj1 == obj2){
+		printf("\n\t Error [Spring]:  A spring must connect two different masses, %i-%i is invalid!\n",obj1,obj2);
+		return;
+	}
+	
+	if(kk<=0){
+		printf("\n\t Error [Spring]:  Spring must have a positive non-zero spring constant, %f is invalid!\n",kk);
+		return;
+	}
 
 	s1.push_back(obj1);
 	s2.push_back(obj2);	
@@ -143,7 +234,6 @@ double ConnectedSystem::GetDist(int obj1, int obj2){
 
 	return sqrt(pow(x.at(obj2)-x.at(obj1),2.0)+pow(y.at(obj2)-y.at(obj1),2.0));
 }
-
 
 void ConnectedSystem::GetSpringObjs(int obj, int &obj1, int &obj2){
 
