@@ -3,6 +3,7 @@
 
 
 from libcpp.vector cimport vector
+from libcpp cimport bool
 
 
 
@@ -34,43 +35,43 @@ cdef extern from "ConnectedSystem.h":
 
 cdef class consys:
     cdef ConnectedSystem *csptr      # hold a C++ instance which we're wrapping
-    def __cinit__():
+    def __cinit__(self):
         self.csptr = new ConnectedSystem()
     def __dealloc__(self):
         del self.csptr
 
 
-    def AddMass(xx, yy, mm):
+    def AddMass(self, xx, yy, mm):
         self.csptr.AddMass(xx, yy, mm)
-    def RemoveMass(obj):
+    def RemoveMass(self, obj):
         self.csptr.RemoveMass(obj)
 
-    def GetMassX(obj):
+    def GetMassX(self, obj):
         return self.csptr.GetMassX(obj)
-    def GetMassY(obj):
+    def GetMassY(self, obj):
         return self.csptr.GetMassY(obj)
-    def GetMassM(obj):
+    def GetMassM(self, obj):
         return self.csptr.GetMassM(obj)
 
-    def GetObjConnections(obj):
+    def GetObjConnections(self, obj):
         return self.csptr.GetObjConnections(obj)
-    def AddSpring(obj1, obj2, kk):
+    def AddSpring(self, obj1, obj2, kk):
         self.csptr.AddSpring(obj1, obj2, kk)
-    def RemoveSpring(obj):
+    def RemoveSpring(self, obj):
         self.csptr.RemoveSpring(obj)
     
         #void self.csptr.GetSpringObjs(int, &int, &int) #test later
 
-    def GetSpringL(obj):
+    def GetSpringL(self, obj):
         return self.csptr.GetSpringL(obj)
-    def GetSpringK(obj):
+    def GetSpringK(self, obj):
         return self.csptr.GetSpringK(obj)
-    def GetDist(obj1, obj2):    
+    def GetDist(self, obj1, obj2):    
         return self.csptr.GetDist(obj1, obj2)
 
-    def CheckMassObj(obj):
+    def CheckMassObj(self, obj):
         return self.csptr.CheckMassObj(obj)
-    def CheckSpringObj(obj):
-        bool self.csptr.CheckSpringObj(obj)       
+    def CheckSpringObj(self, obj):
+        return self.csptr.CheckSpringObj(obj)       
         #void self.csptr.Print()
         #void self.csptr.Clear()
