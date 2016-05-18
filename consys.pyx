@@ -26,8 +26,8 @@ cdef extern from "ConnectedSystem.h":
 
         bool CheckMassObj(int)
         bool CheckSpringObj(int)       
-        #void Print()
-        #void Clear()
+        void Print()
+        void Clear()
 
 
 
@@ -72,6 +72,8 @@ cdef class consys:
     def CheckMassObj(self, obj):
         return self.csptr.CheckMassObj(obj)
     def CheckSpringObj(self, obj):
-        return self.csptr.CheckSpringObj(obj)       
-        #void self.csptr.Print()
-        #void self.csptr.Clear()
+        return self.csptr.CheckSpringObj(obj)
+    def Print(self):   
+        self.csptr.Print()
+    def Clear(self):
+        self.csptr.Clear()
