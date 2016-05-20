@@ -10,4 +10,8 @@ Checklist [physics]:-
   5. Implement solutions to produce a dynamic system
 
 Checklist [GUI & I/O]:-
-  1. Think of a list
+  1. Integrate the consys class with GUI
+  2. Make objects scaleable
+  3. Make an interface panel
+  4. Build in animations
+  5. Make objects react to click events
