@@ -8,3 +8,6 @@ Checklist [physics]:-
   3. Build force matrix for example system and solve for eigenvalues and eigenvectors [DONE]
   4. Consistency check with simple analytical case
   5. Implement solutions to produce a dynamic system
+
+Checklist [GUI & I/O]:-
+  1. Think of a list
