@@ -12,6 +12,7 @@ cdef extern from "ConnectedSystem.h":
         ConnectedSystem() except +
         void AddMass(double, double, double)
         void RemoveMass(int)
+        int GetNumberOfMasses()
         double GetMassX(int)
         double GetMassY(int)
         double GetMassM(int)      
@@ -19,6 +20,7 @@ cdef extern from "ConnectedSystem.h":
     
         void AddSpring(int, int, double)
         void RemoveSpring(int)
+        int GetNumberOfSprings()
         #void GetSpringObjs(int, &int, &int) #test later
         double GetSpringL(int)
         double GetSpringK(int)      
@@ -46,6 +48,8 @@ cdef class consys:
     def RemoveMass(self, obj):
         self.csptr.RemoveMass(obj)
 
+    def GetNumberOfMasses(self):
+        return self.csptr.GetNumberOfMasses()
     def GetMassX(self, obj):
         return self.csptr.GetMassX(obj)
     def GetMassY(self, obj):
@@ -59,7 +63,8 @@ cdef class consys:
         self.csptr.AddSpring(obj1, obj2, kk)
     def RemoveSpring(self, obj):
         self.csptr.RemoveSpring(obj)
-    
+    def GetNumberOfSprings(self):
+        return self.csptr.GetNumberOfSprings()   
         #void self.csptr.GetSpringObjs(int, &int, &int) #test later
 
     def GetSpringL(self, obj):
