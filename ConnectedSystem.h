@@ -16,6 +16,7 @@ class ConnectedSystem
 		
 		void AddMass(double xx, double yy, double mm);
 		void RemoveMass(int obj);
+		int GetNumberOfMasses(){ return nmasses; }
 		void GetMassXYM(int obj, double &xx, double &yy, double &mm);
 		double GetMassX(int obj);
 		double GetMassY(int obj);
@@ -24,6 +25,7 @@ class ConnectedSystem
 	
 		void AddSpring(int obj1, int obj2, double kk);	
 		void RemoveSpring(int obj);
+		int GetNumberOfSprings(){ return nsrings; }		
 		void GetSpringObjs(int obj, int &obj1, int &obj2);
 		double GetSpringL(int obj);
 		double GetSpringK(int obj);			
