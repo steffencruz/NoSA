@@ -25,7 +25,7 @@ class ConnectedSystem
 	
 		void AddSpring(int obj1, int obj2, double kk);	
 		void RemoveSpring(int obj);
-		int GetNumberOfSprings(){ return nsrings; }		
+		int GetNumberOfSprings(){ return nsprings; }		
 		void GetSpringObjs(int obj, int &obj1, int &obj2);
 		double GetSpringL(int obj);
 		double GetSpringK(int obj);			
