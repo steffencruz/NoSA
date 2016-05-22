@@ -31,8 +31,8 @@ void ConnectedSystem::SetupMatrix(){
 		
 	F = zeros<mat>(2*n,2*n);
 	
-	double val1, val2, val3, dx, dy, l0;
-	int i1,i2;
+	double val1, val2, dx, dy, l0, kk;
+	int i1,i2,j2;
 	std::vector<int> indx;
 	
 	for(int i=0; i<n; i++){
@@ -40,21 +40,27 @@ void ConnectedSystem::SetupMatrix(){
 			
 			val1 = 0;
 			val2 = 0;
-			val3 = 0;			
 			if(i==j){
 				printf("\n\t [%i,%i] Diagonal :  ",i,j);
 			
 				indx = GetObjConnections(i);
 				for(int k=0; k<indx.size(); k++){
 					GetSpringObjs(indx.at(k),i1,i2);
-					dx = x.at(i1)-x.at(i2);
-					dy = y.at(i1)-y.at(i2);					
-					l0 = L(i1,i2);
-					printf("\n\t\t%i - %i  dx = %.2f  dy = %.2f  l0 = %.2f  k = %.2f",i1,i2,dx,dy,l0,K(i1,i2));
-					
-					val1 += -K(i1,i2)*dx*dx/(l0*l0);
-					val2 += -K(i1,i2)*dx*dy/(l0*l0);
-					val3 += -K(i1,i2)*dy*dy/(l0*l0);
+					if(i1==i){
+						j2 = i2;
+					} else if(i2==i){
+						j2 = i1;														
+					} else continue;						
+	
+					dx = x.at(i)-x.at(j2);
+					dy = y.at(i)-y.at(j2);
+					l0 = L(i,j2);			
+					kk = K(i,j2);	
+						
+					printf("\n\t\t%i - %i  dx = %.2f  dy = %.2f  l0 = %.2f  k = %.2f",i1,i2,dx,dy,l0,kk);
+
+					val1 += std::fabs(kk*dx/(l0*m.at(i)));
+					val2 += std::fabs(kk*dy/(l0*m.at(i)));
 				}
 			} else {
 				if(K(i,j)==0)
@@ -62,15 +68,12 @@ void ConnectedSystem::SetupMatrix(){
 				dx = x.at(i)-x.at(j);
 				dy = y.at(i)-y.at(j);
 				
-				val1  = K(i,j)*dx*dx/(L(i,j)*L(i,j));
-				val2  = K(i,j)*dx*dx/(L(i,j)*L(i,j));
-				val3  = K(i,j)*dx*dx/(L(i,j)*L(i,j));	
+				val1  = -K(i,j)*dx*dx/(L(i,j)*L(i,j));
+				val2  = -K(i,j)*dy*dy/(L(i,j)*L(i,j));
 			}
 			
 			F(i,j)     = val1;
-			F(i+n,j)   = val2;
-			F(i,j+n)   = val2;
-			F(i+n,j+n) = val3;
+			F(i+n,j+n) = val2;
 		}
 	}
 	
@@ -82,16 +85,59 @@ void ConnectedSystem::SolveMatrix(){
 	
 	SetupMatrix();
 
-	W = arma::zeros<arma::vec>(nmasses);
-	V = arma::zeros<arma::mat>(nmasses,nmasses);	
+	vec W = zeros<vec>(nmasses);
+	mat V = zeros<mat>(nmasses,nmasses);	
 	
 	bool success = arma::eig_sym(W,V,F);
+	if(!success){
+		printf("\n\t Error [matrix solver]:  eigen decomposition failed!\n");
+		return;
+	}
+
+	W.print("\nEigenvalues ^ 2 [all] = ");
+	V.print("\nEigenvectors [all] = ");		
 	
-	W.print("\nEigenvalues = ");
+	double tol = 1e-10;
+	uvec indx = find(W>tol);
+	nmodes = indx.n_elem; // set number of modes
 	
-	V.print("\nEigenvectors = ");	
+	E = sqrt(W.elem(indx)); // locate all eigenvalues^2>1e-10 and sqrt them
+	E.print("\nEigenvalues = ");
 	
+	Ax = V.submat(span(0,nmasses-1),span(indx.at(0),indx.at(indx.n_elem-1)));
+	Ay = V.submat(span(nmasses,2*nmasses-1),span(indx.at(0),indx.at(indx.n_elem-1)));
+
+	Ax.print("\nX Eigenvectors = ");
+	Ay.print("\nY Eigenvectors = ");	
 }
+
+
+void ConnectedSystem::GetMassEigenMotion(int obj, int mode, double t, double &xx, double &yy){
+
+	if(!CheckMassObj(obj))
+		return;
+	
+	if(!CheckEigenMode(mode))
+		return;
+		
+	xx = x.at(obj) + Ax.at(obj)*sin(E(mode)*t);
+	yy = y.at(obj) + Ay.at(obj)*sin(E(mode)*t);
+}
+
+void ConnectedSystem::GetSpringEigenMotion(int obj, int mode, double t, double &xx1, double &yy1, double &xx2, double &yy2){
+
+	if(!CheckSpringObj(obj))
+		return;
+	
+	if(!CheckEigenMode(mode))
+		return;
+	
+	int obj1, obj2;
+	GetSpringObjs(obj,obj1,obj2);
+	
+	GetMassEigenMotion(obj1,mode,t,xx1,yy1);
+	GetMassEigenMotion(obj2,mode,t,xx2,yy2);
+}		
 
 void ConnectedSystem::AddMass(double xx, double yy, double mm){
 
@@ -105,6 +151,8 @@ void ConnectedSystem::RemoveMass(int obj){
 	
 	if(!CheckMassObj(obj))
 		return;
+		
+	ClearMatrices();	
 			
 	// remove all associated connections with obj
 	std::vector<int> indx = GetObjConnections(obj);
@@ -125,6 +173,8 @@ void ConnectedSystem::RemoveSpring(int obj){
 
 	if(!CheckSpringObj(obj))
 		return;
+		
+	ClearMatrices();			
 	
 	// the mass indices also change when we remove an element.
 	// spring [2-4] becomes [1-3] if we remove element 0.
@@ -203,6 +253,16 @@ bool ConnectedSystem::CheckSpringObj(int obj){
 	}
 }
 
+bool ConnectedSystem::CheckEigenMode(int mode){
+
+	if(mode<0 || mode>=nmodes){
+		printf("\n\t Error [Mode] :  index %i out of range. Must be in range 0-%i!\n",mode,nmodes-1);
+		return false;
+	} else{
+		return true;
+	}
+}
+
 void ConnectedSystem::AddSpring(int obj1, int obj2, double kk){
 
 	if(!CheckMassObj(obj1) || !CheckMassObj(obj2))
@@ -275,6 +335,13 @@ void ConnectedSystem::Print(){
 		if(i==0)	printf("\n\n\t obj\t   masses \t l\t  k  ");
 		printf("\n\t %3i\t %3i -%3i\t %3.1f\t %3.1f",i,s1.at(i),s2.at(i),l.at(i),k.at(i));	
 	}
+	
+	printf("\n\n\n Modes [total = %i] :-",nmodes);
+	for(int i=0; i<nmodes; i++){
+		if(i==0)	printf("\n\n\t mode\t freq \t");
+		printf("\n\t %3i\t %5.3f",i,E(i));	
+	}
+	
 	printf("\n- - - - - - - - - - - - - - - - - - - - - - - - - - - -\n\n");
 	return;
 }
@@ -291,8 +358,20 @@ void ConnectedSystem::Clear(){
 	s2.clear();
 	k.clear();
 	l.clear();
+	
+	ClearMatrices();
 
 	return;
 }
 
+void ConnectedSystem::ClearMatrices(){
+	nmodes = 0;
+	Z.reset(); 
+	K.reset(); 
+	L.reset(); 
+	F.reset(); 
+	E.reset(); 
+	Ax.reset();
+	Ay.reset();
+}
 		
