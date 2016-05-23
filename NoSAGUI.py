@@ -89,19 +89,31 @@ class AnimationBox(QtGui.QFrame):
         self.initAnimationBox()
 
     def initAnimationBox(self):
-        self.MassList.append((100.,100., 20.))
-        self.MassList.append((350.,120., 25.))
-        self.MassList.append((100.,120., 14.))
-        self.MassList.append((130.,100., 12.))
-        self.SpringList.append((1,2,1.))
+
+        #test system
+        self.cs = consys()
+        aa = 20. #mass spacing
+        mm = 15.0 #mass
+        kk = 3.0 #spring const
+        nmass = 10
+
+        #add masses
+        for ii in range(nmass):
+            self.cs.AddMass((ii+1)*aa, 250., mm)
+
+
+        for ii in range(nmass-1):
+            self.cs.AddSpring(ii, ii+1, kk)
+
 
     def paintEvent(self, event):
         painter = QtGui.QPainter(self)
-        
-        self.drawSpring(painter,100., 100., 350., 120, 1.)
 
-        for mass in self.MassList:
-            self.drawMass(painter, *mass)
+        #for i in range(self.cs.GetNumberOfSprings()):
+        #    self.drawSpring()
+        
+        for i in range(self.cs.GetNumberOfMasses()):
+            self.drawMass(painter, self.cs.GetMassX(i), self.cs.GetMassY(i), self.cs.GetMassM(i))
 
         #path = QtGui.QPainterPath()
         #path.moveTo(0,0) #move to start
@@ -216,23 +228,6 @@ def main():
 
 
     #test system
-    cs = consys()
-
-    aa = 2.0 #mass spacing
-    mm = 1.0 #mass
-    kk = 3.0 #spring const
-    nmass = 10
-
-    #add masses
-    for ii in range(nmass):
-        cs.AddMass(ii*aa, 0., mm)
-
-
-    for ii in range(nmass-1):
-        cs.AddSpring(ii, ii+1, kk)
-
-    #show initialized system
-    cs.Print()
 
     app = QtGui.QApplication(sys.argv)
     NoSA = NoSAGUI()
