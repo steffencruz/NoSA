@@ -16,13 +16,15 @@ class NoSAGUI(QtGui.QMainWindow):
         
     def initUI(self):    
 
-        self.abox = AnimationBox(self)
-        self.setCentralWidget(self.abox)
+        self.form = FormWidget(self)
 
-                
+        self.setCentralWidget(self.form)
+
         self.resize(500, 500)
         self.setWindowTitle('NoSA')        
         self.show()
+
+
 
 
 # class NoSAGUI(QtGui.QMainWindow):
@@ -76,6 +78,29 @@ class NoSAGUI(QtGui.QMainWindow):
 #             self.label1.setText("Add Mass")
  
 
+class FormWidget(QtGui.QWidget):
+
+    def __init__(self, parent):        
+        super(FormWidget, self).__init__(parent)
+        self.button1 = QtGui.QPushButton("Add Mass")
+        self.button2 = QtGui.QPushButton("Add Spring")
+
+        self.hbox = QtGui.QHBoxLayout()
+        self.buttonbox = QtGui.QVBoxLayout()
+        self.imbox = QtGui.QVBoxLayout()
+        self.buttonbox.addWidget(self.button1)
+        self.buttonbox.addWidget(self.button2)
+
+        self.abox = AnimationBox(self)
+        self.imbox.addWidget(self.abox)
+
+        #imbox.addWidget(self.abox)
+
+        self.hbox.addLayout(self.imbox)        
+        self.hbox.addLayout(self.buttonbox)  
+        self.setLayout(self.hbox)   
+
+
 class AnimationBox(QtGui.QFrame):
     BoxWidth = 400
     BoxHeight = 400
@@ -95,20 +120,19 @@ class AnimationBox(QtGui.QFrame):
 
         #test system
         self.cs = consys()
-        aa = 50. #mass spacing
+        aa = 100. #mass spacing
         mm = 15.0 #mass
         kk = 3.0 #spring const
-        nmass = 10
+        nmass = 3
 
         #add masses
         for ii in range(nmass):
-            self.cs.AddMass((ii+0.5)*aa, 250, mm)
+            self.cs.AddMass((ii+0.5)*aa, 100+(ii*0.5*aa), mm)
 
 
         for ii in range(nmass-1):
             self.cs.AddSpring(ii, ii+1, kk)
 
-        self.cs.SetupMatrix()
         self.cs.SolveMatrix()
 
         self.cs.SetMotionScale(15.)
