@@ -95,14 +95,14 @@ class AnimationBox(QtGui.QFrame):
 
         #test system
         self.cs = consys()
-        aa = 8. #mass spacing
+        aa = 50. #mass spacing
         mm = 15.0 #mass
         kk = 3.0 #spring const
         nmass = 10
 
         #add masses
         for ii in range(nmass):
-            self.cs.AddMass((ii+0.5)*aa, (0.5*ii+2.)*aa, mm)
+            self.cs.AddMass((ii+0.5)*aa, 250, mm)
 
 
         for ii in range(nmass-1):
@@ -110,6 +110,8 @@ class AnimationBox(QtGui.QFrame):
 
         self.cs.SetupMatrix()
         self.cs.SolveMatrix()
+
+        self.cs.SetMotionScale(15.)
 
         self.Animate = True
 
@@ -124,16 +126,16 @@ class AnimationBox(QtGui.QFrame):
 
         if not self.Animate:
             for i in range(self.cs.GetNumberOfSprings()):
-                self.drawSpring(painter, *self.cs.GetSpringXYXYK(i))
+                self.drawSpring(painter, *self.cs.GetSpringXYXYK(i), self.cs.GetSpringL(i))
             
             for i in range(self.cs.GetNumberOfMasses()):
                 self.drawMass(painter, *self.cs.GetMassXYM(i))
         else:
             for i in range(self.cs.GetNumberOfSprings()):
-                self.drawSpring(painter, *self.scaleTuple(self.cs.GetSpringEigenMotion(i,2,0.05*self.GlobalTime),5), self.cs.GetSpringK(i))
+                self.drawSpring(painter, *self.cs.GetSpringEigenMotion(i,0,0.02*self.GlobalTime), self.cs.GetSpringK(i), self.cs.GetSpringL(i))
             
             for i in range(self.cs.GetNumberOfMasses()):
-                self.drawMass(painter, *self.scaleTuple(self.cs.GetMassEigenMotion(i,2,0.05*self.GlobalTime),5), self.cs.GetMassM(i))
+                self.drawMass(painter, *self.cs.GetMassEigenMotion(i,0,0.02*self.GlobalTime), self.cs.GetMassM(i))
 
 
 
@@ -150,11 +152,11 @@ class AnimationBox(QtGui.QFrame):
         path.addEllipse(x-size/2, y-size/2, size, size)
         painter.fillPath(path, color)
 
-    def drawSpring(self, painter, x0, y0, x1, y1, k): #draw a spring
+    def drawSpring(self, painter, x0, y0, x1, y1, k, l0): #draw a spring
         """Draw a spring from (X0,Y0) to (X1,Y1) with strenght K"""
         SrpingColor = 0xAAAAAA
         color = QtGui.QColor(SrpingColor)
-       
+
 
         #SrpingColor = 0xCC6666
         #color = QtGui.QColor(SrpingColor)
@@ -169,7 +171,7 @@ class AnimationBox(QtGui.QFrame):
         #path.moveTo(x0,y0) #move to start
         #path.lineTo(x1,y1)
 
-        xpath,ypath = self.MakeSpringPath(x0, y0, x1, y1, loopspacing)
+        xpath,ypath = self.MakeSpringPath(x0, y0, x1, y1, loopspacing, l0)
 
         for (x,y) in zip(xpath[1:],ypath[1:]): #skip the first point, we already entered it
             path.lineTo(x,y)
@@ -182,13 +184,16 @@ class AnimationBox(QtGui.QFrame):
         self.GlobalTime += self.dt
         self.update()
 
-    def MakeSpringPath(self, x0, y0, x1, y1, spacing):
+    def MakeSpringPath(self, x0, y0, x1, y1, spacing, l0):
         """Function to calculate the spring shape path and return a np array containing the path"""
         totlen = np.sqrt((x1-x0)**2+(y1-y0)**2)
+
+        x1 = (x1-x0)*l0/totlen + x0
+        y1 = (y1-y0)*l0/totlen + y0
         
         prelen = 10. #lenght before loops at each side of the srping in pix
         
-        sprlen = totlen-2*prelen
+        sprlen = l0-2*prelen
         if sprlen > 0:  
             loops = int(sprlen/spacing)
             excess = sprlen%spacing
@@ -220,13 +225,14 @@ class AnimationBox(QtGui.QFrame):
             ypts = np.zeros(2)
             xpts[1] = totlen
         
-        
+        #scale:
+        xpts *= totlen/l0
         #rotate
         th = np.arctan2((y1-y0),(x1-x0))
-
-        
         xptsrot = xpts*np.cos(th) - ypts*np.sin(th)
         yptsrot = xpts*np.sin(th) + ypts*np.cos(th)
+
+        #move
         xptsrot += x0
         yptsrot += y0
         
