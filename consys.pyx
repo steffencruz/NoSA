@@ -1,6 +1,3 @@
-# distutils: language = c++
-# distutils: sources = ConnectedSystem.cxx
-
 
 from libcpp.vector cimport vector
 from libcpp cimport bool
