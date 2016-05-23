@@ -43,20 +43,19 @@ class ConnectedSystem
 		void Clear();
 		void ClearMatrices();
 		
-	private:
+	private: 
 		int nmasses;
 		std::vector<double> x;
 		std::vector<double> y;
 		std::vector<double> m;
 		
-	private:
 		int nsprings;	
 		std::vector<int>    s1;
 		std::vector<int>    s2;	
 		std::vector<double> l;
 		std::vector<double> k;
 		
-	private:
+	private: // Armadillo
 		int nmodes;
 		double motionscale;
 		arma::vec Z; // combined position vector of masses
@@ -64,9 +63,9 @@ class ConnectedSystem
 		arma::mat L; // length matrix
 		arma::mat F; // force matrix
 		
-		arma::cx_vec E; // eigenvalues vector
-		arma::cx_mat Ax; // X eigenvectors matrix	
-		arma::cx_mat Ay; // Y eigenvectors matrix	
+		arma::vec E; // eigenvalues vector
+		arma::mat Ax; // X eigenvectors matrix	
+		arma::mat Ay; // Y eigenvectors matrix	
 };
 
 #endif
