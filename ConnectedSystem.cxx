@@ -6,7 +6,6 @@ using namespace arma;
 
 
 ConnectedSystem::ConnectedSystem(){
-
 	Clear();
 }
 
@@ -31,17 +30,17 @@ void ConnectedSystem::SetupMatrix(){
 		
 	F = zeros<mat>(2*n,2*n);
 	
-	double val1, val2, dx, dy, l0, kk;
+	double valx, valy, dx, dy;
 	int i1,i2,j2;
 	std::vector<int> indx;
 	
 	for(int i=0; i<n; i++){
 		for(int j=0; j<n; j++){	
 			
-			val1 = 0;
-			val2 = 0;
+			valx = 0;
+			valy = 0;
 			if(i==j){
-				printf("\n\t [%i,%i] Diagonal :  ",i,j);
+				//printf("\n\t [%i,%i] Diagonal :  ",i,j);
 			
 				indx = GetObjConnections(i);
 				for(int k=0; k<indx.size(); k++){
@@ -52,28 +51,26 @@ void ConnectedSystem::SetupMatrix(){
 						j2 = i1;														
 					} else continue;						
 	
-					dx = x.at(i)-x.at(j2);
-					dy = y.at(i)-y.at(j2);
-					l0 = L(i,j2);			
-					kk = K(i,j2);	
+					dx = x.at(j2)-x.at(i);
+					dy = y.at(j2)-y.at(i);
 						
-					printf("\n\t\t%i - %i  dx = %.2f  dy = %.2f  l0 = %.2f  k = %.2f",i1,i2,dx,dy,l0,kk);
+					//printf("\n\t\t%i - %i  dx = %.2f  dy = %.2f  l0 = %.2f  k = %.2f",i1,i2,dx,dy,L(i,j2),K(i,j2));
 
-					val1 += std::fabs(kk*dx/(l0*m.at(i)));
-					val2 += std::fabs(kk*dy/(l0*m.at(i)));
+					valx += K(i,j2)*dx/(L(i,j2)*m.at(i));
+					valy += K(i,j2)*dy/(L(i,j2)*m.at(i));
 				}
 			} else {
 				if(K(i,j)==0)
 					continue;					
-				dx = x.at(i)-x.at(j);
-				dy = y.at(i)-y.at(j);
+				dx = x.at(j)-x.at(i);
+				dy = y.at(j)-y.at(i);
 				
-				val1  = -K(i,j)*dx*dx/(L(i,j)*L(i,j));
-				val2  = -K(i,j)*dy*dy/(L(i,j)*L(i,j));
+				valx  = K(i,j)*dx/(L(i,j)*m.at(i));
+				valy  = K(i,j)*dy/(L(i,j)*m.at(i));
 			}
 			
-			F(i,j)     = val1;
-			F(i+n,j+n) = val2;
+			F(i,j)     = valx;
+			F(i+n,j+n) = valy;
 		}
 	}
 	
@@ -85,10 +82,10 @@ void ConnectedSystem::SolveMatrix(){
 	
 	SetupMatrix();
 
-	vec W = zeros<vec>(nmasses);
-	mat V = zeros<mat>(nmasses,nmasses);	
+	cx_vec W = zeros<cx_vec>(nmasses);
+	cx_mat V = zeros<cx_mat>(nmasses,nmasses);	
 	
-	bool success = arma::eig_sym(W,V,F);
+	bool success = arma::eig_gen(W,V,F);
 	if(!success){
 		printf("\n\t Error [matrix solver]:  eigen decomposition failed!\n");
 		return;
@@ -363,6 +360,7 @@ void ConnectedSystem::Clear(){
 	l.clear();
 	
 	ClearMatrices();
+	motionscale = 1;	
 
 	return;
 }

@@ -58,15 +58,15 @@ class ConnectedSystem
 		
 	private:
 		int nmodes;
-		double motionscale = 1.;
+		double motionscale;
 		arma::vec Z; // combined position vector of masses
 		arma::mat K; // reduced stiffness / inertia matrix
 		arma::mat L; // length matrix
 		arma::mat F; // force matrix
 		
-		arma::vec E; // eigenvalues vector
-		arma::mat Ax; // X eigenvectors matrix	
-		arma::mat Ay; // Y eigenvectors matrix	
+		arma::cx_vec E; // eigenvalues vector
+		arma::cx_mat Ax; // X eigenvectors matrix	
+		arma::cx_mat Ay; // Y eigenvectors matrix	
 };
 
 #endif
