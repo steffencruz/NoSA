@@ -80,47 +80,62 @@ class AnimationBox(QtGui.QFrame):
     BoxWidth = 400
     BoxHeight = 400
 
-    MassList = []
-    SpringList = []
+    Animate = False #turn animation on or off
+    GlobalTime = 0.
+    dt = 50.
 
     def __init__(self, parent):
         super(AnimationBox, self).__init__(parent)
 
         self.initAnimationBox()
 
+
+
     def initAnimationBox(self):
 
         #test system
         self.cs = consys()
-        aa = 20. #mass spacing
+        aa = 8. #mass spacing
         mm = 15.0 #mass
         kk = 3.0 #spring const
         nmass = 10
 
         #add masses
         for ii in range(nmass):
-            self.cs.AddMass((ii+1)*aa, 250., mm)
+            self.cs.AddMass((ii+0.5)*aa, (0.5*ii+2.)*aa, mm)
 
 
         for ii in range(nmass-1):
             self.cs.AddSpring(ii, ii+1, kk)
 
+        self.cs.SetupMatrix()
+        self.cs.SolveMatrix()
+
+        self.Animate = True
+
+        self.AnimationTimer = QtCore.QTimer()
+        self.AnimationTimer.setInterval(self.dt)
+        self.AnimationTimer.timeout.connect(self.AnimationTimerHandler)
+        self.AnimationTimer.start()
+
 
     def paintEvent(self, event):
         painter = QtGui.QPainter(self)
 
-        #for i in range(self.cs.GetNumberOfSprings()):
-        #    self.drawSpring()
-        
-        for i in range(self.cs.GetNumberOfMasses()):
-            self.drawMass(painter, self.cs.GetMassX(i), self.cs.GetMassY(i), self.cs.GetMassM(i))
+        if not self.Animate:
+            for i in range(self.cs.GetNumberOfSprings()):
+                self.drawSpring(painter, *self.cs.GetSpringXYXYK(i))
+            
+            for i in range(self.cs.GetNumberOfMasses()):
+                self.drawMass(painter, *self.cs.GetMassXYM(i))
+        else:
+            for i in range(self.cs.GetNumberOfSprings()):
+                self.drawSpring(painter, *self.scaleTuple(self.cs.GetSpringEigenMotion(i,2,0.05*self.GlobalTime),5), self.cs.GetSpringK(i))
+            
+            for i in range(self.cs.GetNumberOfMasses()):
+                self.drawMass(painter, *self.scaleTuple(self.cs.GetMassEigenMotion(i,2,0.05*self.GlobalTime),5), self.cs.GetMassM(i))
 
-        #path = QtGui.QPainterPath()
-        #path.moveTo(0,0) #move to start
-        #path.lineTo(100,100)
-        #painter.setPen(QtGui.QPen(QtGui.QColor(QtGui.darkGreen), 3))
-        #painter.drawPath(path)
-        #draw springs
+
 
 
 
@@ -163,6 +178,9 @@ class AnimationBox(QtGui.QFrame):
         painter.setPen(pen)
         painter.drawPath(path)
 
+    def AnimationTimerHandler(self):
+        self.GlobalTime += self.dt
+        self.update()
 
     def MakeSpringPath(self, x0, y0, x1, y1, spacing):
         """Function to calculate the spring shape path and return a np array containing the path"""
@@ -214,7 +232,8 @@ class AnimationBox(QtGui.QFrame):
         
         return (xptsrot, yptsrot)
 
-
+    def scaleTuple(self, tup, scale):
+        return tuple([scale*elem for elem in tup])
 
 
 
