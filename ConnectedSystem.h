@@ -14,6 +14,7 @@ class ConnectedSystem
 		void SetupMatrix();
 		void SolveMatrix();
 		
+		void SetMotionScale(double scale);
 		void GetMassEigenMotion(int obj, int mode, double t, double &xx, double &yy);
 		void GetSpringEigenMotion(int obj, int mode, double t, double &xx1, double &yy1,
 																													double &xx2, double &yy2);																						
@@ -57,6 +58,7 @@ class ConnectedSystem
 		
 	private:
 		int nmodes;
+		double motionscale = 1.;
 		arma::vec Z; // combined position vector of masses
 		arma::mat K; // reduced stiffness / inertia matrix
 		arma::mat L; // length matrix

@@ -111,6 +111,9 @@ void ConnectedSystem::SolveMatrix(){
 	Ay.print("\nY Eigenvectors = ");	
 }
 
+void ConnectedSystem::SetMotionScale(double scale){
+	motionscale = scale;
+}
 
 void ConnectedSystem::GetMassEigenMotion(int obj, int mode, double t, double &xx, double &yy){
 
@@ -120,8 +123,8 @@ void ConnectedSystem::GetMassEigenMotion(int obj, int mode, double t, double &xx
 	if(!CheckEigenMode(mode))
 		return;
 		
-	xx = x.at(obj) + Ax.at(obj)*sin(E(mode)*t);
-	yy = y.at(obj) + Ay.at(obj)*sin(E(mode)*t);
+	xx = x.at(obj) + motionscale*Ax.at(obj)*sin(E(mode)*t);
+	yy = y.at(obj) + motionscale*Ay.at(obj)*sin(E(mode)*t);
 }
 
 void ConnectedSystem::GetSpringEigenMotion(int obj, int mode, double t, double &xx1, double &yy1, double &xx2, double &yy2){
