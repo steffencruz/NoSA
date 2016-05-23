@@ -40,7 +40,7 @@ void ConnectedSystem::SetupMatrix(){
 			valx = 0;
 			valy = 0;
 			if(i==j){
-				//printf("\n\t [%i,%i] Diagonal :  ",i,j);
+				printf("\n\t [%i,%i] Diagonal :  ",i,j);
 			
 				indx = GetObjConnections(i);
 				for(int k=0; k<indx.size(); k++){
@@ -51,22 +51,23 @@ void ConnectedSystem::SetupMatrix(){
 						j2 = i1;														
 					} else continue;						
 	
-					dx = x.at(j2)-x.at(i);
-					dy = y.at(j2)-y.at(i);
+					dx = x.at(i)-x.at(j2);
+					dy = y.at(i)-y.at(j2);
 						
-					//printf("\n\t\t%i - %i  dx = %.2f  dy = %.2f  l0 = %.2f  k = %.2f",i1,i2,dx,dy,L(i,j2),K(i,j2));
+					printf("\n\t\t%i - %i  dx = %.2f  dy = %.2f  l0 = %.2f  k = %.2f",i1,i2,dx,dy,L(i,j2),K(i,j2));
 
-					valx += K(i,j2)*dx/(L(i,j2)*m.at(i));
-					valy += K(i,j2)*dy/(L(i,j2)*m.at(i));
+					valx += K(i,j2)*dx*dx/(L(i,j2)*L(i,j2));
+					valy += K(i,j2)*dy*dy/(L(i,j2)*L(i,j2));
 				}
 			} else {
 				if(K(i,j)==0)
 					continue;					
-				dx = x.at(j)-x.at(i);
-				dy = y.at(j)-y.at(i);
+	
+				dx = x.at(i)-x.at(j);
+				dy = y.at(i)-y.at(j);
 				
-				valx  = K(i,j)*dx/(L(i,j)*m.at(i));
-				valy  = K(i,j)*dy/(L(i,j)*m.at(i));
+				valx  = -K(i,j)*dx*dx/(L(i,j)*L(i,j));
+				valy  = -K(i,j)*dy*dy/(L(i,j)*L(i,j));
 			}
 			
 			F(i,j)     = valx;
@@ -82,30 +83,31 @@ void ConnectedSystem::SolveMatrix(){
 	
 	SetupMatrix();
 
-	cx_vec W = zeros<cx_vec>(nmasses);
+	cx_vec W2 = zeros<cx_vec>(nmasses);
 	cx_mat V = zeros<cx_mat>(nmasses,nmasses);	
 	
-	bool success = arma::eig_gen(W,V,F);
+	bool success = arma::eig_gen(W2,V,F);
 	if(!success){
 		printf("\n\t Error [matrix solver]:  eigen decomposition failed!\n");
 		return;
 	}
 
-	W.print("\nEigenvalues ^ 2 [all] = ");
+	W2.print("\nEigenvalues ^ 2 [all] = ");
 	V.print("\nEigenvectors [all] = ");		
 	
 	double tol = 1e-10;
-	uvec indx = find(W>tol);
+	uvec indx = find(real(W2)>tol);
 	nmodes = indx.n_elem; // set number of modes
 	
-	E = sqrt(W.elem(indx)); // locate all eigenvalues^2>1e-10 and sqrt them
+	E = sqrt(real(W2.elem(indx))); // locate all eigenvalues^2>1e-10 and sqrt them
 	E.print("\nEigenvalues = ");
 	
-	Ax = V.submat(span(0,nmasses-1),span(indx.at(0),indx.at(indx.n_elem-1)));
-	Ay = V.submat(span(nmasses,2*nmasses-1),span(indx.at(0),indx.at(indx.n_elem-1)));
+	Ax = real(V.submat(span(0,nmasses-1),span(indx.at(0),indx.at(indx.n_elem-1))));
+	Ay = real(V.submat(span(nmasses,2*nmasses-1),span(indx.at(0),indx.at(indx.n_elem-1))));
 
 	Ax.print("\nX Eigenvectors = ");
 	Ay.print("\nY Eigenvectors = ");	
+	
 }
 
 void ConnectedSystem::SetMotionScale(double scale){
