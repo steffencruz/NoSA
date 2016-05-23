@@ -11,6 +11,7 @@ cdef extern from "ConnectedSystem.h":
         void SetupMatrix();
         void SolveMatrix();
         
+        void SetMotionScale(double)
         void GetMassEigenMotion(int, int, double, double, double)
         void GetSpringEigenMotion(int, int, double, double, double, double, double)
 
@@ -52,7 +53,10 @@ cdef class consys:
         self.csptr.SetupMatrix()
     def SolveMatrix(self):
         self.csptr.SolveMatrix();
-        
+
+
+    def SetMotionScale(self, scale):
+        self.csptr.SetMotionScale(scale)
     def GetMassEigenMotion(self, obj, mode, t):
         cdef double xx, yy
         self.csptr.GetMassEigenMotion(obj, mode, t, xx, yy)
