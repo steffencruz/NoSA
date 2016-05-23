@@ -18,7 +18,7 @@ cdef extern from "ConnectedSystem.h":
         void AddSpring(int, int, double)
         void RemoveSpring(int)
         int GetNumberOfSprings()
-        #void GetSpringObjs(int, &int, &int) #test later
+        void GetSpringObjs(int, int, int) 
         double GetSpringL(int)
         double GetSpringK(int)      
         double GetDist(int, int)
@@ -62,7 +62,11 @@ cdef class consys:
         self.csptr.RemoveSpring(obj)
     def GetNumberOfSprings(self):
         return self.csptr.GetNumberOfSprings()   
-        #void self.csptr.GetSpringObjs(int, &int, &int) #test later
+    
+    def GetSpringObjs(self, spring):
+        cdef int obj1, obj2
+        self.csptr.GetSpringObjs(spring, obj1, obj2) 
+        return (obj1, obj2)
 
     def GetSpringL(self, obj):
         return self.csptr.GetSpringL(obj)
