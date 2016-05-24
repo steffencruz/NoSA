@@ -126,15 +126,29 @@ class AnimationBox(QtGui.QFrame):
         nmass = 3
 
         #add masses
-        for ii in range(nmass):
-            self.cs.AddMass((ii+0.5)*aa, 100+(ii*0.5*aa), mm)
+#        x0 = 125
+#        y0 = 100.
+#        l0 = 100.
+#        self.cs.AddMass(x0,y0, mm)
+#        self.cs.AddMass(x0-l0*0.5,y0+l0*np.sqrt(3)/2, mm)
+#        self.cs.AddMass(x0+l0*0.5,y0+l0*np.sqrt(3)/2, mm)
+#        self.cs.AddSpring(0, 1, kk)
+#        self.cs.AddSpring(1, 2, kk)
+#        self.cs.AddSpring(2, 0, kk)
+        
+#        for ii in range(nmass):
+#            self.cs.AddMass((ii+0.5)*aa, 100+(ii*0.5*aa), mm)
 
 
-        for ii in range(nmass-1):
-            self.cs.AddSpring(ii, ii+1, kk)
+#        for ii in range(nmass-1):
+#            self.cs.AddSpring(ii, ii+1, kk)
+				
+				self.cs.BuildMassPoly(5,30,150,150)
+				self.cd.BuildSpringChain(3.0);
 
         self.cs.SolveMatrix()
-
+        self.cs.Print()
+        
         self.cs.SetMotionScale(15.)
 
         self.Animate = True
@@ -148,6 +162,8 @@ class AnimationBox(QtGui.QFrame):
     def paintEvent(self, event):
         painter = QtGui.QPainter(self)
 
+        mode = 0        
+
         if not self.Animate:
             for i in range(self.cs.GetNumberOfSprings()):
                 self.drawSpring(painter, *self.cs.GetSpringXYXYK(i), self.cs.GetSpringL(i))
@@ -156,10 +172,10 @@ class AnimationBox(QtGui.QFrame):
                 self.drawMass(painter, *self.cs.GetMassXYM(i))
         else:
             for i in range(self.cs.GetNumberOfSprings()):
-                self.drawSpring(painter, *self.cs.GetSpringEigenMotion(i,0,0.02*self.GlobalTime), self.cs.GetSpringK(i), self.cs.GetSpringL(i))
+                self.drawSpring(painter, *self.cs.GetSpringEigenMotion(i,mode,0.02*self.GlobalTime), self.cs.GetSpringK(i), self.cs.GetSpringL(i))
             
             for i in range(self.cs.GetNumberOfMasses()):
-                self.drawMass(painter, *self.cs.GetMassEigenMotion(i,0,0.02*self.GlobalTime), self.cs.GetMassM(i))
+                self.drawMass(painter, *self.cs.GetMassEigenMotion(i,mode,0.02*self.GlobalTime), self.cs.GetMassM(i))
 
 
 

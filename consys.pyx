@@ -32,6 +32,13 @@ cdef extern from "ConnectedSystem.h":
         double GetSpringK(int)      
         double GetDist(int, int)
 
+        void BuildMassGrid(int, int, double, double, double, double, bool);
+        void BuildMassRand(int, double, double, double, double, int);		
+        void BuildMassPoly(int, double, double, double, int);
+    
+        void BuildSpringChain(double, int , int , int ); 
+        void BuildSpringNest(double );	
+
         bool CheckMassObj(int)
         bool CheckSpringObj(int)       
         void Print()
@@ -49,12 +56,22 @@ cdef class consys:
         del self.csptr
 
 
-    def SetupMatrix(self):
-        self.csptr.SetupMatrix()
     def SolveMatrix(self):
         self.csptr.SolveMatrix();
+        
+    def BuildMassGrid(self, nrows, ncols, xmin, xmax, ymin, ymax, connected):
+        self.csptr.BuildMassGrid(nrows,ncols,xmin,max,ymin,ymax,connected);
+    def BuildMassRand(self, nparticles, xmin, xmax, ymin, ymax, spr_type):
+        self.csptr.BuildMassRand(nparticles,xmin,max,ymin,ymax,spr_type);
+    def BuildMassPoly(self, nsides, length, xmid, ymid, spr_type):
+        self.csptr.BuildMassPoly(nsides,length,xmid,ymid,spr_type);
 
-
+		        
+    def BuildSpringChain(self, kval, rule, obj_from, ntimes):
+        self.csptr.BuildSpringChain(kval,rule,obj_from,ntimes);
+    def BuildSpringNest(self,kval):
+        self.csptr.BuildSpringNest(kval);   
+                
     def SetMotionScale(self, scale):
         self.csptr.SetMotionScale(scale)
     def GetMassEigenMotion(self, obj, mode, t):
