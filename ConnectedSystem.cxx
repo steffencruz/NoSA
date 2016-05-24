@@ -1,7 +1,7 @@
 #include "ConnectedSystem.h"
 #include <algorithm>
 #include <cmath>
-#include <random>
+//#include <random>
 
 using namespace arma;
 
@@ -17,7 +17,7 @@ ConnectedSystem::~ConnectedSystem(){
 
 }
 
-void ConnectedSystem::BuildMassGrid(int nrows, int ncols, double xmin, double xmax, double ymin, double ymax, bool connected){
+void ConnectedSystem::BuildMassGrid(int nrows, int ncols, double xmin, double xmax, double ymin, double ymax, bool connect){
 	Clear();
 	
 	double xval, yval;
@@ -30,16 +30,17 @@ void ConnectedSystem::BuildMassGrid(int nrows, int ncols, double xmin, double xm
 		for(int j=0; j<nrows; j++){	
 			yval = ymin + ((double)j+0.5)*ystep;
 		
-			AddMass(xval,yval,10.0);
-			if(i>0 && connected)
-				BuildSpringChain(10.0,nrows,j,1); // connect x rows with springs			
+			AddMass(xval,yval,20.0);
+			if(i>0 && connect)
+				BuildSpringChain(5.0,nrows,j,1); // connect x rows with springs			
 		}
-		if(connected)BuildSpringChain(10.0,1,i*nrows,ncols); // connect x rows with springs
+		if(connect)BuildSpringChain(5.0,1,i*nrows,ncols); // connect x rows with springs
 	}
 	
 	return;
 }
 
+/*
 void ConnectedSystem::BuildMassRand(int nparticles, double xmin, double xmax, double ymin, double ymax, int spr_type){
 	Clear();
 
@@ -60,6 +61,7 @@ void ConnectedSystem::BuildMassRand(int nparticles, double xmin, double xmax, do
 
 	return;
 }
+*/
 		
 void ConnectedSystem::BuildMassPoly(int nsides, double length, double xmid, double ymid, int spr_type){
 	Clear();
@@ -72,13 +74,13 @@ void ConnectedSystem::BuildMassPoly(int nsides, double length, double xmid, doub
 		xval = xmid + length*cos((double)i*arc);
 		yval = ymid + length*sin((double)i*arc);		
 		
-		AddMass(xval,yval,10.0);
+		AddMass(xval,yval,20.0);
 	}
 	
 	if(spr_type==0)
-		BuildSpringNest(10.0);			
+		BuildSpringNest(5.0);			
 	else if(spr_type>0)
-		BuildSpringChain(10.0,spr_type,0,nmasses);		
+		BuildSpringChain(5.0,spr_type,0,nmasses);		
 	
 	return;
 }
@@ -90,9 +92,9 @@ void ConnectedSystem::BuildSpringChain(double kval, int rule, int obj_from, int 
 
 	// if kval>0, all springs have a fixed constant
 	// if kval<0, all springs have random constant in range 0-|kval|
-	std::random_device rd;
-	std::mt19937 gen(rd());
-	std::uniform_real_distribution<> dis(0,std::fabs(kval));	
+	//std::random_device rd;
+	//std::mt19937 gen(rd());
+	//std::uniform_real_distribution<> dis(0,std::fabs(kval));	
 	
 	if(obj_from<0 || obj_from>=nmasses-1)
 		obj_from = 0;
@@ -102,16 +104,15 @@ void ConnectedSystem::BuildSpringChain(double kval, int rule, int obj_from, int 
 	for(int i=0; i<ntimes; i++){
 		obj_to = (obj_from+rule) % nmasses; // wrap around
 
-		if(debug)printf("\n\t %i - %i \t k = %.f",obj_from,obj_to,kval);
+		if(debug)printf("\t %i - %i \t k = %.f\n",obj_from,obj_to,kval);
 
 		if(kval>0)
 			AddSpring(obj_from,obj_to,kval);
-		else if(kval<0)
-			AddSpring(obj_from,obj_to,dis(gen));
+	//	else if(kval<0)
+	//		AddSpring(obj_from,obj_to,dis(gen));
 		
 		obj_from = obj_to;	
 	}	
-	
 	return;
 }
 
@@ -119,9 +120,9 @@ void ConnectedSystem::BuildSpringNest(double kval){
 
 	// if kval>0, all springs have a fixed constant
 	// if kval<0, all springs have random constant in range 0-|kval|
-	std::random_device rd;
-	std::mt19937 gen(rd());
-	std::uniform_real_distribution<> dis(0,std::fabs(kval));	
+//	std::random_device rd;
+//	std::mt19937 gen(rd());
+	//std::uniform_real_distribution<> dis(0,std::fabs(kval));	
 
 	for(int i=0; i<nmasses; i++){
 		for(int j=i+1; j<nmasses; j++){	
@@ -129,8 +130,8 @@ void ConnectedSystem::BuildSpringNest(double kval){
 			
 			if(kval>0)
 				AddSpring(i,j,kval);
-			else if(kval<0)
-				AddSpring(i,j,dis(gen));
+		//	else if(kval<0)
+		//		AddSpring(i,j,dis(gen));
 		}
 	}
 	

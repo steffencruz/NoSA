@@ -143,9 +143,19 @@ class AnimationBox(QtGui.QFrame):
 #        for ii in range(nmass-1):
 #            self.cs.AddSpring(ii, ii+1, kk)
 				
-				self.cs.BuildMassPoly(5,30,150,150)
-				self.cd.BuildSpringChain(3.0);
+#				self.cs.BuildMassPoly(5,30,150,150)
+#				self.cd.BuildSpringChain(3.0);
+				
+#        nrows = 3
+#        ncols = 2
+#        xmin = 50.0
+#        xmax = 200.0
+#        ymin = 50.0
+#        ymax = 200.0
+#        connect = True
+#        self.cs.BuildMassGrid(nrows,ncols,xmin,xmax,ymin,ymax,connect)
 
+        self.cs.BuildMassPoly(6,60.,150.,150.,1)
         self.cs.SolveMatrix()
         self.cs.Print()
         
@@ -162,7 +172,7 @@ class AnimationBox(QtGui.QFrame):
     def paintEvent(self, event):
         painter = QtGui.QPainter(self)
 
-        mode = 0        
+        mode = 4      
 
         if not self.Animate:
             for i in range(self.cs.GetNumberOfSprings()):

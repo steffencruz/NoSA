@@ -43,6 +43,8 @@ int main(){
 	
 	sys.SetDebug(true);
 	sys.BuildMassGrid(3,2,50,100,50,100,true);
+	sys.SolveMatrix();
+	
 	sys.Print();
 	
 	return 0;

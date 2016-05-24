@@ -39,8 +39,8 @@ class ConnectedSystem
 		// 	BuildMassRand -  makes a random distribution which can be filled with random springs
 		// 	BuildMassPoly -  makes a polygon distribution which can be filled with springs
 
-		void BuildMassGrid(int nrows, int ncols, double xmin, double xmax, double ymin, double ymax, bool connected);
-		void BuildMassRand(int nparticles, double xmin, double xmax, double ymin, double ymax, int spr_type);		
+		void BuildMassGrid(int nrows, int ncols, double xmin, double xmax, double ymin, double ymax, bool connect);
+	//	void BuildMassRand(int nparticles, double xmin, double xmax, double ymin, double ymax, int spr_type);		
 		void BuildMassPoly(int nsides, double length, double xmid, double ymid, int spr_type);
 		
 		void BuildSpringChain(double kval, int rule=1, int obj_from=0, int ntimes=0); 
