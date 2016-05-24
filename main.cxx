@@ -32,12 +32,29 @@ int main(){
 			
 	sys.Print();
 
+/*
 	double t,x,y;
 	for(int i=0; i<50; i++){
 		t = (double)i*2*3.1415/50.0;
 		sys.GetMassEigenMotion(0,0,t,x,y);
 		printf("\n\t time = %5.3f\t x[0] = %5.3f\t y[0] = %5.3f",t,x,y);
 	}
+*/
+	
+	sys.SetDebug(true);
+	sys.BuildMassGrid(3,2,50,100,50,100,true);
+	sys.Print();
+	
+	return 0;
+	sys.BuildMassPoly(4,50,50,50,1);
+	sys.Print();
+		
+//	sys.SolveMatrix();
+//	sys.Print();
+	
+	sys.BuildMassRand(10,0,100,0,100,0);
+	sys.SolveMatrix();
+	sys.Print();	
 	
 	printf("\n\t Complete! \n\n");
 	return 0;
