@@ -1,6 +1,14 @@
 # NoSA (No Springs Attached)
 Calculates the normal modes of a multiple mass-spring system.
 
+Requirements:-
+  1. Armadillo version armadillo-6.700.7
+  2. Python version 3.5
+  3. numpy version
+  4. pyQt version
+  5. [recommended anaconda for OS X ]
+  6. Cython version
+
 Checklist [physics]:-
   1. Build ConnectedSystem class which can add and remove masses and springs [DONE]
   2. Working makefile [DONE]
