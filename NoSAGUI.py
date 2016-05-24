@@ -20,7 +20,7 @@ class NoSAGUI(QtGui.QMainWindow):
 
         self.setCentralWidget(self.form)
 
-        self.resize(500, 500)
+        self.resize(900, 500)
         self.setWindowTitle('NoSA')        
         self.show()
 
@@ -102,8 +102,8 @@ class FormWidget(QtGui.QWidget):
 
 
 class AnimationBox(QtGui.QFrame):
-    BoxWidth = 400
-    BoxHeight = 400
+    BoxWidth = 500
+    BoxHeight = 500
 
     Animate = False #turn animation on or off
     GlobalTime = 0.
@@ -155,7 +155,17 @@ class AnimationBox(QtGui.QFrame):
 #        connect = True
 #        self.cs.BuildMassGrid(nrows,ncols,xmin,xmax,ymin,ymax,connect)
 
-        self.cs.BuildMassPoly(6,60.,150.,150.,1)
+        self.cs.BuildMassPoly(20,190.,220.,250.,1)
+        self.cs.SetMassM(2,40.)        
+        self.cs.SetMassM(10,40.)
+        self.cs.AddMass(250.0,250.0,50.0)
+        self.cs.AddSpring(10,15,10.)        
+        self.cs.AddSpring(1,self.cs.GetNumberOfMasses()-1,5)
+        self.cs.AddSpring(7,self.cs.GetNumberOfMasses()-1,1)        
+        self.cs.AddSpring(11,self.cs.GetNumberOfMasses()-1,3)
+        self.cs.SetMassX(13,self.cs.GetMassX(13)-15.)       
+        self.cs.SetMassY(13,self.cs.GetMassY(13)-15.)       
+        
         self.cs.SolveMatrix()
         self.cs.Print()
         
@@ -172,7 +182,7 @@ class AnimationBox(QtGui.QFrame):
     def paintEvent(self, event):
         painter = QtGui.QPainter(self)
 
-        mode = 4      
+        mode = 20
 
         if not self.Animate:
             for i in range(self.cs.GetNumberOfSprings()):

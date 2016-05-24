@@ -400,6 +400,24 @@ double ConnectedSystem::GetMassM(int obj){
 	return m.at(obj);
 }
 
+void ConnectedSystem::SetMassX(int obj, double xx){
+
+	if(CheckMassObj(obj))
+		x.at(obj) = xx;
+}	
+
+void ConnectedSystem::SetMassY(int obj, double yy){
+
+	if(CheckMassObj(obj))
+		y.at(obj) = yy;
+}	
+
+void ConnectedSystem::SetMassM(int obj, double mm){
+
+	if(CheckMassObj(obj))
+		m.at(obj) = mm;
+}	
+
 bool ConnectedSystem::CheckMassObj(int obj){
 
 	if(obj<0 || obj>=nmasses){

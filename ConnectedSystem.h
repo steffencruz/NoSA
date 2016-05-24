@@ -24,7 +24,10 @@ class ConnectedSystem
 		void GetMassXYM(int obj, double &xx, double &yy, double &mm);
 		double GetMassX(int obj);
 		double GetMassY(int obj);
-		double GetMassM(int obj);		
+		double GetMassM(int obj);						
+		void SetMassX(int obj, double xx);
+		void SetMassY(int obj, double yy);
+		void SetMassM(int obj, double mm);			
 		std::vector<int> GetObjConnections(int obj);
 	
 		void AddSpring(int obj1, int obj2, double kk);	

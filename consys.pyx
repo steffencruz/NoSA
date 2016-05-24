@@ -21,6 +21,10 @@ cdef extern from "ConnectedSystem.h":
         double GetMassX(int)
         double GetMassY(int)
         double GetMassM(int)
+        void SetMassX(int, double)
+        void SetMassY(int, double)
+        void SetMassM(int, double)
+        
         void GetMassXYM(int, double, double, double);      
         vector[int] GetObjConnections(int)
     
@@ -97,6 +101,12 @@ cdef class consys:
         return self.csptr.GetMassY(obj)
     def GetMassM(self, obj):
         return self.csptr.GetMassM(obj)
+    def SetMassX(self, obj,xx):
+        self.csptr.SetMassX(obj, xx)                
+    def SetMassY(self, obj, yy):
+        self.csptr.SetMassY(obj, yy)        
+    def SetMassM(self, obj, mm):
+        self.csptr.SetMassM(obj, mm)        
     def GetMassXYM(self, obj):
         cdef double xx, yy, mm
         self.csptr.GetMassXYM(obj, xx, yy, mm);
