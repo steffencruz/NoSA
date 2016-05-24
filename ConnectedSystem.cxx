@@ -1,9 +1,13 @@
 #include "ConnectedSystem.h"
 #include <algorithm>
 #include <cmath>
+#include <random>
 
 using namespace arma;
 
+#ifndef PI
+#define PI 3.14159265359
+#endif
 
 ConnectedSystem::ConnectedSystem(){
 	Clear();
@@ -11,6 +15,126 @@ ConnectedSystem::ConnectedSystem(){
 
 ConnectedSystem::~ConnectedSystem(){
 
+}
+
+void ConnectedSystem::BuildMassGrid(int nrows, int ncols, double xmin, double xmax, double ymin, double ymax, bool connected){
+	Clear();
+	
+	double xval, yval;
+	double xstep = (xmax-xmin)/(double)ncols;
+	double ystep = (ymax-ymin)/(double)nrows;
+	
+	for(int i=0; i<ncols; i++){
+		xval = xmin + ((double)i+0.5)*xstep;
+	
+		for(int j=0; j<nrows; j++){	
+			yval = ymin + ((double)j+0.5)*ystep;
+		
+			AddMass(xval,yval,10.0);
+			if(i>0 && connected)
+				BuildSpringChain(10.0,nrows,j,1); // connect x rows with springs			
+		}
+		if(connected)BuildSpringChain(10.0,1,i*nrows,ncols); // connect x rows with springs
+	}
+	
+	return;
+}
+
+void ConnectedSystem::BuildMassRand(int nparticles, double xmin, double xmax, double ymin, double ymax, int spr_type){
+	Clear();
+
+	std::random_device rd;
+	std::mt19937 gen(rd());
+	std::uniform_real_distribution<> disx(xmin,xmax);	
+	std::uniform_real_distribution<> disy(ymin,ymax);		
+	
+	double xval, yval;
+	
+	for(int i=0; i<nparticles; i++)
+		AddMass(disx(gen),disy(gen),10.0);
+	
+	if(spr_type==0)
+		BuildSpringNest(-10.0);			
+	else if(spr_type>0)
+		BuildSpringChain(-10.0,spr_type);	
+
+	return;
+}
+		
+void ConnectedSystem::BuildMassPoly(int nsides, double length, double xmid, double ymid, int spr_type){
+	Clear();
+
+	double xval, yval;
+	double arc = 2*PI/(double)nsides;
+	
+	for(int i=0; i<nsides; i++){
+	
+		xval = xmid + length*cos((double)i*arc);
+		yval = ymid + length*sin((double)i*arc);		
+		
+		AddMass(xval,yval,10.0);
+	}
+	
+	if(spr_type==0)
+		BuildSpringNest(10.0);			
+	else if(spr_type>0)
+		BuildSpringChain(10.0,spr_type,0,nmasses);		
+	
+	return;
+}
+
+
+void ConnectedSystem::BuildSpringChain(double kval, int rule, int obj_from, int ntimes){
+
+	if(debug) printf("\n\n Building Spring Chain [%i masses]\n",nmasses);
+
+	// if kval>0, all springs have a fixed constant
+	// if kval<0, all springs have random constant in range 0-|kval|
+	std::random_device rd;
+	std::mt19937 gen(rd());
+	std::uniform_real_distribution<> dis(0,std::fabs(kval));	
+	
+	if(obj_from<0 || obj_from>=nmasses-1)
+		obj_from = 0;
+	
+	int obj_to;
+	
+	for(int i=0; i<ntimes; i++){
+		obj_to = (obj_from+rule) % nmasses; // wrap around
+
+		if(debug)printf("\n\t %i - %i \t k = %.f",obj_from,obj_to,kval);
+
+		if(kval>0)
+			AddSpring(obj_from,obj_to,kval);
+		else if(kval<0)
+			AddSpring(obj_from,obj_to,dis(gen));
+		
+		obj_from = obj_to;	
+	}	
+	
+	return;
+}
+
+void ConnectedSystem::BuildSpringNest(double kval){
+
+	// if kval>0, all springs have a fixed constant
+	// if kval<0, all springs have random constant in range 0-|kval|
+	std::random_device rd;
+	std::mt19937 gen(rd());
+	std::uniform_real_distribution<> dis(0,std::fabs(kval));	
+
+	for(int i=0; i<nmasses; i++){
+		for(int j=i+1; j<nmasses; j++){	
+			if(i==j) continue;
+			
+			if(kval>0)
+				AddSpring(i,j,kval);
+			else if(kval<0)
+				AddSpring(i,j,dis(gen));
+		}
+	}
+	
+	return;
 }
 
 void ConnectedSystem::SetupMatrix(){
@@ -25,25 +149,27 @@ void ConnectedSystem::SetupMatrix(){
 		L(s2.at(i),s1.at(i)) = l.at(i);	
 	}
 
-	K.print("K = ");
-	L.print("L = ");	
+	if(debug)K.print("K = ");
+	if(debug)L.print("L = ");	
 		
 	F = zeros<mat>(2*n,2*n);
 	
-	double valx, valy, dx, dy;
+	double valxx, valyy, valxy, dx, dy;
 	int i1,i2,j2;
 	std::vector<int> indx;
 	
 	for(int i=0; i<n; i++){
 		for(int j=0; j<n; j++){	
 			
-			valx = 0;
-			valy = 0;
+			valxx = 0;
+			valyy = 0;
+			valxy = 0;
+			
 			if(i==j){
-				printf("\n\t [%i,%i] Diagonal :  ",i,j);
+				if(debug)printf("\n\t [%i,%i] Diagonal :  ",i,j);
 			
 				indx = GetObjConnections(i);
-				for(int k=0; k<indx.size(); k++){
+				for(int k=0; k<(int)indx.size(); k++){
 					GetSpringObjs(indx.at(k),i1,i2);
 					if(i1==i){
 						j2 = i2;
@@ -54,10 +180,11 @@ void ConnectedSystem::SetupMatrix(){
 					dx = x.at(i)-x.at(j2);
 					dy = y.at(i)-y.at(j2);
 						
-					printf("\n\t\t%i - %i  dx = %.2f  dy = %.2f  l0 = %.2f  k = %.2f",i1,i2,dx,dy,L(i,j2),K(i,j2));
+					if(debug)printf("\n\t\t%i - %i  dx = %.2f  dy = %.2f  l0 = %.2f  k = %.2f",i1,i2,dx,dy,L(i,j2),K(i,j2));
 
-					valx += K(i,j2)*dx*dx/(L(i,j2)*L(i,j2));
-					valy += K(i,j2)*dy*dy/(L(i,j2)*L(i,j2));
+					valxx += K(i,j2)*dx*dx/(L(i,j2)*L(i,j2));
+					valyy += K(i,j2)*dy*dy/(L(i,j2)*L(i,j2));
+					valxy += K(i,j2)*dx*dy/(L(i,j2)*L(i,j2));										
 				}
 			} else {
 				if(K(i,j)==0)
@@ -66,16 +193,19 @@ void ConnectedSystem::SetupMatrix(){
 				dx = x.at(i)-x.at(j);
 				dy = y.at(i)-y.at(j);
 				
-				valx  = -K(i,j)*dx*dx/(L(i,j)*L(i,j));
-				valy  = -K(i,j)*dy*dy/(L(i,j)*L(i,j));
+				valxx  = -K(i,j)*dx*dx/(L(i,j)*L(i,j));
+				valyy  = -K(i,j)*dy*dy/(L(i,j)*L(i,j));
+				valxy  = -K(i,j)*dx*dy/(L(i,j)*L(i,j));
 			}
 			
-			F(i,j)     = valx;
-			F(i+n,j+n) = valy;
+			F(i,j)     = valxx;
+			F(i+n,j+n) = valyy;
+			F(i+n,j)   = valxy;
+			F(i,j+n)   = valxy;
 		}
 	}
 	
-	F.print("\nF = ");		
+	if(debug)F.print("\nF = ");		
 	return;
 }
 
@@ -86,27 +216,27 @@ void ConnectedSystem::SolveMatrix(){
 	cx_vec W2 = zeros<cx_vec>(nmasses);
 	cx_mat V = zeros<cx_mat>(nmasses,nmasses);	
 	
-	bool success = arma::eig_gen(W2,V,F);
+	bool success = eig_gen(W2,V,F);
 	if(!success){
 		printf("\n\t Error [matrix solver]:  eigen decomposition failed!\n");
 		return;
 	}
 
-	W2.print("\nEigenvalues ^ 2 [all] = ");
-	V.print("\nEigenvectors [all] = ");		
+	if(debug)W2.print("\nEigenvalues ^ 2 [all] = ");
+	if(debug)V.print("\nEigenvectors [all] = ");		
 	
 	double tol = 1e-10;
 	uvec indx = find(real(W2)>tol);
 	nmodes = indx.n_elem; // set number of modes
 	
 	E = sqrt(real(W2.elem(indx))); // locate all eigenvalues^2>1e-10 and sqrt them
-	E.print("\nEigenvalues = ");
+	if(debug)E.print("\nEigenvalues = ");
 	
 	Ax = real(V.submat(span(0,nmasses-1),span(indx.at(0),indx.at(indx.n_elem-1))));
 	Ay = real(V.submat(span(nmasses,2*nmasses-1),span(indx.at(0),indx.at(indx.n_elem-1))));
 
-	Ax.print("\nX Eigenvectors = ");
-	Ay.print("\nY Eigenvectors = ");	
+	if(debug)Ax.print("\nX Eigenvectors = ");
+	if(debug)Ay.print("\nY Eigenvectors = ");	
 	
 }
 
@@ -122,8 +252,8 @@ void ConnectedSystem::GetMassEigenMotion(int obj, int mode, double t, double &xx
 	if(!CheckEigenMode(mode))
 		return;
 		
-	xx = x.at(obj) + motionscale*Ax.at(obj)*sin(E(mode)*t);
-	yy = y.at(obj) + motionscale*Ay.at(obj)*sin(E(mode)*t);
+	xx = x.at(obj) + motionscale*Ax.at(obj,mode)*sin(E(mode)*t);
+	yy = y.at(obj) + motionscale*Ay.at(obj,mode)*sin(E(mode)*t);
 }
 
 void ConnectedSystem::GetSpringEigenMotion(int obj, int mode, double t, double &xx1, double &yy1, double &xx2, double &yy2){
@@ -149,6 +279,30 @@ void ConnectedSystem::AddMass(double xx, double yy, double mm){
 	nmasses++;
 }
 
+void ConnectedSystem::AddSpring(int obj1, int obj2, double kk){
+
+	if(!CheckMassObj(obj1) || !CheckMassObj(obj2))
+		return;
+		
+	if(obj1 == obj2){
+		printf("\n\t Error [Spring]:  A spring must connect two different masses, %i-%i is invalid!\n",obj1,obj2);
+		return;
+	}
+	
+	if(kk<=0){
+		printf("\n\t Error [Spring]:  Spring must have a positive non-zero spring constant, %f is invalid!\n",kk);
+		return;
+	}
+
+	s1.push_back(obj1);
+	s2.push_back(obj2);	
+	k.push_back(kk);
+	l.push_back(GetDist(obj1,obj2));
+	nsprings++;
+	
+	return;
+}
+
 void ConnectedSystem::RemoveMass(int obj){
 	
 	if(!CheckMassObj(obj))
@@ -159,7 +313,7 @@ void ConnectedSystem::RemoveMass(int obj){
 	// remove all associated connections with obj
 	std::vector<int> indx = GetObjConnections(obj);
 	std::sort(indx.begin(),indx.end(), std::greater<int>()); // descending order sort
-	for(int i=0; i<indx.size(); i++)
+	for(int i=0; i<(int)indx.size(); i++)
 		RemoveSpring(indx.at(i));
 
 	// now remove mass
@@ -198,6 +352,16 @@ std::vector<int> ConnectedSystem::GetObjConnections(int obj){
 			indx.push_back(i);
 		
 	return indx;
+}
+
+void ConnectedSystem::GetSpringObjs(int obj, int &obj1, int &obj2){
+
+	if(!CheckSpringObj(obj))
+		return;
+		
+	obj1 = s1.at(obj);
+	obj2 = s2.at(obj);
+	return;		
 }
 
 void ConnectedSystem::GetMassXYM(int obj, double &xx, double &yy, double &mm){
@@ -265,46 +429,12 @@ bool ConnectedSystem::CheckEigenMode(int mode){
 	}
 }
 
-void ConnectedSystem::AddSpring(int obj1, int obj2, double kk){
-
-	if(!CheckMassObj(obj1) || !CheckMassObj(obj2))
-		return;
-		
-	if(obj1 == obj2){
-		printf("\n\t Error [Spring]:  A spring must connect two different masses, %i-%i is invalid!\n",obj1,obj2);
-		return;
-	}
-	
-	if(kk<=0){
-		printf("\n\t Error [Spring]:  Spring must have a positive non-zero spring constant, %f is invalid!\n",kk);
-		return;
-	}
-
-	s1.push_back(obj1);
-	s2.push_back(obj2);	
-	k.push_back(kk);
-	l.push_back(GetDist(obj1,obj2));
-	nsprings++;
-	
-	return;
-}
-
 double ConnectedSystem::GetDist(int obj1, int obj2){
 
 	if(!CheckMassObj(obj1) || !CheckMassObj(obj2))
 		return 0;
 
 	return sqrt(pow(x.at(obj2)-x.at(obj1),2.0)+pow(y.at(obj2)-y.at(obj1),2.0));
-}
-
-void ConnectedSystem::GetSpringObjs(int obj, int &obj1, int &obj2){
-
-	if(!CheckSpringObj(obj))
-		return;
-		
-	obj1 = s1.at(obj);
-	obj2 = s2.at(obj);
-	return;		
 }
 
 double ConnectedSystem::GetSpringL(int obj){
@@ -349,7 +479,7 @@ void ConnectedSystem::Print(){
 }
 
 void ConnectedSystem::Clear(){
-
+	
 	nmasses  = 0;	
 	x.clear();
 	y.clear();
