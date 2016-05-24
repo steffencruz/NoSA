@@ -14,12 +14,12 @@ Checklist [physics]:-
   2. Working makefile [DONE]
   3. Integrate Armadillo linear algebra package [DONE]
   3. Build force matrix for example system and solve for eigenvalues and eigenvectors [DONE]
-  4. Consistency check with simple analytical case
-  5. Implement solutions to produce a dynamic system
+  4. Consistency check with simple analytical case [DONE]
+  5. Implement solutions to produce a dynamic system [DONE]
 
 Checklist [GUI & I/O]:-
-  1. Integrate the consys class with GUI
-  2. Make objects scaleable
-  3. Make an interface panel
-  4. Build in animations
+  1. Integrate the consys class with GUI [DONE]
+  2. Make objects scaleable [DONE]
+  3. Make an interface panel [DONE]
+  4. Build in animations [DONE]
   5. Make objects react to click events
