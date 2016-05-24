@@ -182,7 +182,7 @@ class AnimationBox(QtGui.QFrame):
     def paintEvent(self, event):
         painter = QtGui.QPainter(self)
 
-        mode = 20
+        mode = 18
 
         if not self.Animate:
             for i in range(self.cs.GetNumberOfSprings()):
