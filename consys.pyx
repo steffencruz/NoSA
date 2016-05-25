@@ -44,7 +44,8 @@ cdef extern from "ConnectedSystem.h":
         void BuildSpringNest(double )
 
         bool CheckMassObj(int)
-        bool CheckSpringObj(int)       
+        bool CheckSpringObj(int)   
+        void SetDebug(bool)    
         void Print()
         void Clear()
 
@@ -146,3 +147,5 @@ cdef class consys:
         self.csptr.Print()
     def Clear(self):
         self.csptr.Clear()
+    def SetDebug(self,flag):
+        self.csptr.SetDebug(flag)    

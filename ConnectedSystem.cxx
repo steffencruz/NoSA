@@ -32,9 +32,9 @@ void ConnectedSystem::BuildMassGrid(int nrows, int ncols, double xmin, double xm
 		
 			AddMass(xval,yval,20.0);
 			if(i>0 && connect)
-				BuildSpringChain(5.0,nrows,j,1); // connect x rows with springs			
+				BuildSpringChain(5.0,nrows,nrows*(i-1)+j,1); // connect x rows with springs			
 		}
-		if(connect)BuildSpringChain(5.0,1,i*nrows,ncols); // connect x rows with springs
+		if(connect)BuildSpringChain(5.0,1,i*nrows,nrows-1); // connect x rows with springs
 	}
 	
 	return;
@@ -227,14 +227,26 @@ void ConnectedSystem::SolveMatrix(){
 	if(debug)V.print("\nEigenvectors [all] = ");		
 	
 	double tol = 1e-10;
-	uvec indx = find(real(W2)>tol);
+	uvec indx = find(real(W2)>tol); // find non-zero frequency modes
 	nmodes = indx.n_elem; // set number of modes
 	
 	E = sqrt(real(W2.elem(indx))); // locate all eigenvalues^2>1e-10 and sqrt them
-	if(debug)E.print("\nEigenvalues = ");
 	
 	Ax = real(V.submat(span(0,nmasses-1),span(indx.at(0),indx.at(indx.n_elem-1))));
 	Ay = real(V.submat(span(nmasses,2*nmasses-1),span(indx.at(0),indx.at(indx.n_elem-1))));
+
+	// sort eigenvalues
+	indx = sort_index(E);
+	E = E.elem(indx);
+	if(debug)E.print("\nEigenvalues = ");	
+  
+  // get all row indices
+  uvec rows = linspace<uvec>(0,Ax.n_rows-1,Ax.n_rows);
+
+  // order ALL cols of A by b
+  // I'm afraid this just makes a copy
+  Ax = Ax.submat(rows, indx);
+  Ay = Ay.submat(rows, indx);
 
 	if(debug)Ax.print("\nX Eigenvectors = ");
 	if(debug)Ay.print("\nY Eigenvectors = ");	

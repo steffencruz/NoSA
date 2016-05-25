@@ -146,19 +146,28 @@ class AnimationBox(QtGui.QFrame):
 #				self.cs.BuildMassPoly(5,30,150,150)
 #				self.cd.BuildSpringChain(3.0);
 				
-#        nrows = 3
-#        ncols = 2
-#        xmin = 50.0
-#        xmax = 200.0
-#        ymin = 50.0
-#        ymax = 200.0
-#        connect = True
-#        self.cs.BuildMassGrid(nrows,ncols,xmin,xmax,ymin,ymax,connect)
+
+        self.cs.SetDebug(False)
+#        self.cs.BuildMassGrid(2,3,20,380,30,470,True)
+#        self.cs.SetMassX(0,self.cs.GetMassX(0)+20.0)
+#        self.cs.SetMassY(0,self.cs.GetMassY(0)-20.0)
+        
+#        for ii in range(10*15):
+#            self.cs.SetMassM(ii,6.)
+#        self.cs.AddMass(100,100,30)
+#        self.cs.AddMass(150,200,30)
+#        self.cs.AddMass(250,100,50)
+#        self.cs.AddMass(100,400,30)
+#        self.cs.AddSpring(0,1,10)
+#        self.cs.AddSpring(0,2,10)
+#        self.cs.AddSpring(3,1,1)
+#        self.cs.AddSpring(2,3,3)                        
+#        self.cs.BuildMassPoly(3,190.,220.,250.,1)
 
         self.cs.BuildMassPoly(20,190.,220.,250.,1)
         self.cs.SetMassM(2,40.)        
         self.cs.SetMassM(10,40.)
-        self.cs.AddMass(250.0,250.0,50.0)
+        self.cs.AddMass(270.0,200.0,35.0)
         self.cs.AddSpring(10,15,10.)        
         self.cs.AddSpring(1,self.cs.GetNumberOfMasses()-1,5)
         self.cs.AddSpring(7,self.cs.GetNumberOfMasses()-1,1)        
@@ -182,7 +191,7 @@ class AnimationBox(QtGui.QFrame):
     def paintEvent(self, event):
         painter = QtGui.QPainter(self)
 
-        mode = 18
+        mode = 0
 
         if not self.Animate:
             for i in range(self.cs.GetNumberOfSprings()):
